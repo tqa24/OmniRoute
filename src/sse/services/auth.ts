@@ -614,6 +614,18 @@ export async function clearAccountError(
   log.info("AUTH", `Account ${connectionId.slice(0, 8)} error cleared`);
 }
 
+/**
+ * Clear stale error metadata from a provider account after a genuine recovery.
+ * Call this ONLY after a real upstream provider request succeeds — not on cache hits.
+ *
+ * Two valid success-check patterns exist depending on handler return type:
+ * - `response?.ok`   — for handlers that return a raw `Response` (fetch-based):
+ *                      moderations, rerank, audio, video, music, images
+ * - `result.success` — for handlers that return `{ success, data }` (open-sse style):
+ *                      embeddings (uses handleEmbedding which returns a result object)
+ *
+ * Both patterns are intentional. Do NOT unify them arbitrarily.
+ */
 export async function clearRecoveredProviderState(
   credentials: Partial<RecoverableConnectionState> | null
 ) {
