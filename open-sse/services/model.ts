@@ -226,7 +226,19 @@ export async function getModelInfoCore(modelStr, aliasesOrGetter) {
     };
   }
 
-  // Fallback: treat as openai model
+  // Fallback: infer provider from known model name prefixes before defaulting to openai
+  // FIX #73: Models like claude-haiku-4-5-20251001 sent without provider prefix
+  // would incorrectly route to OpenAI. Use heuristic prefix detection first.
+  if (/^claude-/i.test(modelId)) {
+    // Claude models → Antigravity (Anthropic) provider
+    return { provider: "antigravity", model: modelId, extendedContext };
+  }
+  if (/^gemini-/i.test(modelId) || /^gemma-/i.test(modelId)) {
+    // Gemini/Gemma models → Gemini provider
+    return { provider: "gemini", model: modelId, extendedContext };
+  }
+
+  // Last resort: treat as openai model
   return {
     provider: "openai",
     model: modelId,
